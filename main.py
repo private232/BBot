@@ -139,23 +139,20 @@ async def start(update: Update, context: CallbackContext):
 
 
 async def show_admin_panel(update: Update, context: CallbackContext):
-    total_users = len(users)
     keyboard = [
         [InlineKeyboardButton("📋 قائمة المجموعات", callback_data='groups_list')],
-        [InlineKeyboardButton("💰 إرسال أموال لمجموعة", callback_data='send_money_group')],
-        [InlineKeyboardButton("📢 إذاعة رسالة للمستخدمين", callback_data='broadcast_message')],
-        [InlineKeyboardButton("👥 عدد المستخدمين", callback_data='show_users_count')]
+        [InlineKeyboardButton("💰 إرسال أموال لمجموعة", callback_data='send_money_group')]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     if update.callback_query:
         await update.callback_query.edit_message_text(
-            f"👑 لوحة تحكم المشرف\n👥 عدد المستخدمين الكلي: {total_users}",
+            "👑 لوحة تحكم المشرف",
             reply_markup=reply_markup
         )
     else:
         await update.message.reply_text(
-            f"👑 لوحة تحكم المشرف\n👥 عدد المستخدمين الكلي: {total_users}",
+            "👑 لوحة تحكم المشرف",
             reply_markup=reply_markup
         )
 
@@ -361,28 +358,8 @@ async def handle_admin_message(update: Update, context: CallbackContext):
             await update.message.reply_text("⚠️ المبلغ يجب أن يكون رقمًا صحيحًا")
             return
 
-    elif context.user_data['admin_action'] == 'broadcast':
-        # إرسال الرسالة لجميع المستخدمين
-        total_users = len(users)
-        success = 0
-        failed = 0
-
-        for user_id in users:
-            try:
-                await context.bot.send_message(chat_id=user_id, text=text)
-                success += 1
-                time.sleep(0.1)  # تجنب حظر البوت
-            except Exception as e:
-                print(f"Failed to send message to {user_id}: {e}")
-                failed += 1
-
-        await update.message.reply_text(
-            f"✅ تم إرسال الإذاعة بنجاح:\n"
-            f"👥 عدد المستخدمين الكلي: {total_users}\n"
-            f"✔️ تم الإرسال بنجاح لـ: {success}\n"
-            f"❌ فشل الإرسال لـ: {failed}"
-        )
-        context.user_data['admin_action'] = None
+    elif context.user_data['admin_action'] == 'send_money_group':
+        pass
 
 
 async def handle_bank_choice(update: Update, context: CallbackContext):
@@ -756,12 +733,6 @@ async def button_callback(update: Update, context: CallbackContext):
         await admin_send_money(update, context)
     elif data.startswith('send_all_'):
         await admin_send_money(update, context)
-    elif data == 'broadcast_message':
-        context.user_data['admin_action'] = 'broadcast'
-        await query.edit_message_text("📢 الرجاء إرسال الرسالة التي تريد إذاعتها لجميع المستخدمين:")
-    elif data == 'show_users_count':
-        total_users = len(users)
-        await query.answer(f"👥 عدد المستخدمين الكلي: {total_users}", show_alert=True)
 
 
 # معالجة الرسائل النصية
